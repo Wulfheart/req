@@ -6,9 +6,8 @@ const (
 
 	RequestSeparator = "###"
 
-	EnvironmentVariablesFileName = "env.req.toml"
-	CollectionVariablesFileName  = "collection.req.toml"
-	SessionVariablesFileName     = "session.req.toml"
+	EnvironmentVariablesFileName = "env.req.env"
+	CollectionVariablesFileName  = "collection.req.env"
 
 	TemplateVariableDeclarationLeft  = "{{"
 	TemplateVariableDeclarationRight = "}}"

@@ -1,28 +1,43 @@
 package requester
 
 import (
+	"bufio"
+	"bytes"
 	"github.com/joho/godotenv"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 type Request struct {
-	OriginalRequest      http.Request
-	Response             http.Response
-	rawString            string
-	workingString        string
-	config               *Config
-	sessionVariables     *SessionVariables
-	environmentVariables map[string]string
-	collectionVariables  map[string]string
+	OriginalRequest       *http.Request
+	internalRequestToFire *http.Request
+	Response              *http.Response
+	ResponseBody          string
+	rawString             string
+	workingString         string
+	config                *Config
+	sessionVariables      *SessionVariables
+	environmentVariables  map[string]string
+	collectionVariables   map[string]string
 }
 
-func (r *Request) Prepare() {
+func (r *Request) Prepare() error {
 	r.workingString = strings.TrimSpace(r.rawString)
+	r.loadVariablesFromFile()
 	r.injectVariables()
+	r.addContentLengthIfNeeded()
+	r.addHttpToFirstLineOfRequestIfNeeded()
+
+	err := r.parse()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *Request) loadVariablesFromFile() {
@@ -89,4 +104,75 @@ func (r *Request) replacePlaceholderWithActualValue(varName string, value string
 	regex := regexp.MustCompile(TemplateVariableDeclarationLeft + ".*" + varName + ".*" + TemplateVariableDeclarationRight)
 
 	r.workingString = regex.ReplaceAllString(r.workingString, strings.TrimSpace(value))
+}
+
+func (r *Request) addContentLengthIfNeeded() {
+	regex := regexp.MustCompile("\\n\\s*\\n")
+	splitted := regex.Split(r.workingString, 2)
+
+	regex = regexp.MustCompile("Content-Length:.*")
+	if regex.MatchString(splitted[0]) {
+		return
+	}
+
+	var s string = ""
+	x := splitted[0]
+	if x[len(x)-1:] != Newline {
+		s = "\n"
+	}
+
+	splitted[0] = x + s + "Content-Length: " + strconv.Itoa(len(splitted[1])) + "\n"
+
+	r.workingString = splitted[0] + "\n" + splitted[1]
+}
+
+func (r *Request) addHttpToFirstLineOfRequestIfNeeded() {
+	splitted := strings.SplitN(r.workingString, Newline, 2)
+
+	regex := regexp.MustCompile("HTTP(\\d)")
+	if regex.MatchString(splitted[0]) {
+		return
+	}
+	s := strings.TrimSpace(splitted[0]) + " " + r.config.HttpVersion + Newline
+	r.workingString = s + strings.Join(splitted[1:], "")
+
+}
+
+func (r *Request) parse() error {
+	req, err := http.ReadRequest(bufio.NewReader(bytes.NewReader([]byte(r.workingString))))
+
+	if err != nil {
+		return err
+	}
+
+	r.OriginalRequest = req
+
+	req, _ = http.ReadRequest(bufio.NewReader(bytes.NewReader([]byte(r.workingString))))
+	r.internalRequestToFire = req
+
+	return nil
+}
+
+func (r *Request) DoRequest() error {
+	res, err := http.DefaultClient.Do(r.internalRequestToFire)
+
+	if err != nil {
+		return err
+	}
+
+	r.Response = res
+
+	all, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		return err
+	}
+
+	r.ResponseBody = string(all)
+
+	return nil
+}
+
+func (r *Request) DoStuffAfterTheRequest() {
+
 }
