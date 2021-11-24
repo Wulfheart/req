@@ -20,7 +20,11 @@ func BuildRequestsFromFile(filepath string, c Config, session *SessionVariables)
 		}
 	}
 
-	return []Request{}
+	if len(requests) == 0 {
+		requests = append(requests, Request{rawString: strings.Join(lines[:], Newline), config: &c, sessionVariables: session})
+	}
+
+	return requests
 }
 
 func openAndPrepareFile(filepath string) (s string) {
@@ -30,7 +34,7 @@ func openAndPrepareFile(filepath string) (s string) {
 	}
 
 	// For Windows
-	s = strings.ReplaceAll(string(contentBytes), WindowsNewline, Newline)
+	s = strings.ReplaceAll(string(contentBytes), UnixNewline, Newline)
 
 	s = strings.Trim(s, RequestSeparator)
 

@@ -118,12 +118,18 @@ func (r *Request) addContentLengthIfNeeded() {
 	var s string = ""
 	x := splitted[0]
 	if x[len(x)-1:] != Newline {
-		s = "\n"
+		s = Newline
+	}
+	if len(splitted) < 2 {
+		// splitted[0] = x + s + "Content-Length: 0\n"
+		//
+		r.workingString = splitted[0] + Newline + Newline
+		return
 	}
 
-	splitted[0] = x + s + "Content-Length: " + strconv.Itoa(len(splitted[1])) + "\n"
+	splitted[0] = x + s + "Content-Length: " + strconv.Itoa(len(splitted[1])) + Newline
 
-	r.workingString = splitted[0] + "\n" + splitted[1]
+	r.workingString = splitted[0] + Newline + strings.Join(splitted[1:], "")
 }
 
 func (r *Request) addHttpToFirstLineOfRequestIfNeeded() {
@@ -139,15 +145,20 @@ func (r *Request) addHttpToFirstLineOfRequestIfNeeded() {
 }
 
 func (r *Request) parse() error {
-	req, err := http.ReadRequest(bufio.NewReader(bytes.NewReader([]byte(r.workingString))))
+
+	req, err := http.ReadRequest(bufio.NewReader(strings.NewReader(r.workingString)))
 
 	if err != nil {
 		return err
 	}
 
+	req.RequestURI = ""
+
 	r.OriginalRequest = req
 
 	req, _ = http.ReadRequest(bufio.NewReader(bytes.NewReader([]byte(r.workingString))))
+
+	req.RequestURI = ""
 	r.internalRequestToFire = req
 
 	return nil

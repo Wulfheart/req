@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/Wulfheart/req/requester"
 	"github.com/spf13/cobra"
 	"os"
@@ -14,7 +15,7 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initializes a new req collection",
 	Run: func(cmd *cobra.Command, args []string) {
-		folderPath := filepath.Join(folder, ".req")
+		folderPath := filepath.Join(folder, requester.ConfigDirectoryName)
 		err := os.MkdirAll(folderPath, os.ModePerm)
 		if err != nil {
 			panic(err)
@@ -30,6 +31,8 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+
+		fmt.Println("Collection created at", folder)
 	},
 }
 
