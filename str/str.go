@@ -45,3 +45,7 @@ func (s *Str) Prepend(sub string) *Str {
 func (s Str) Contains(substring string) bool {
 	return strings.Contains(s.value, substring)
 }
+func (s *Str) Replace(needle string, with string) *Str {
+	s.value = strings.ReplaceAll(s.value, needle, with)
+	return s
+}

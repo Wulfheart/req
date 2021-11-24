@@ -5,23 +5,26 @@ import (
 	"strings"
 )
 
-func BuildRequestsFromFile(filepath string, c Config, session *SessionVariables, showResult bool) []Request {
+func BuildRequestsFromFile(filepath string, c Config, session *map[string]string, showResult bool) []Request {
 	// Prepare File
 	content := openAndPrepareFile(filepath)
 	// Split file in all requests
-	lines := strings.Split(content, "\n")
+	lines := strings.Split(content, Newline)
 
 	requests := make([]Request, 0)
 
 	lastRequestBreakFoundInLine := 0
+	var i int
 	for i, line := range lines {
 		if strings.Index(line, RequestSeparator) == 0 {
 			requests = append(requests, Request{rawString: strings.Join(lines[lastRequestBreakFoundInLine:i], Newline), config: &c, sessionVariables: session, ShowResult: showResult})
+			lastRequestBreakFoundInLine = i + 1
 		}
 	}
 
-	if len(requests) == 0 {
-		requests = append(requests, Request{rawString: strings.Join(lines[:], Newline), config: &c, sessionVariables: session, ShowResult: showResult})
+	if i != lastRequestBreakFoundInLine {
+		requests = append(requests, Request{rawString: strings.Join(lines[lastRequestBreakFoundInLine:], Newline), config: &c, sessionVariables: session, ShowResult: showResult})
+
 	}
 
 	return requests

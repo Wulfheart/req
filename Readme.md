@@ -1,0 +1,6 @@
+```
+SET_VAR_COLLECTION("TEST",GET_FROM_RESPONSE("body.hello"))
+
+SET_VAR_SESSION hdgfhd 
+
+```

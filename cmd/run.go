@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+var hideResult bool
+
 // runCmd represents the run command
 var runCmd = &cobra.Command{
 	Use:   "run",
@@ -38,7 +40,8 @@ var runCmd = &cobra.Command{
 			file, _ = os.Stat(configPath)
 
 		}
-		var session requester.SessionVariables
+		var session map[string]string = make(map[string]string)
+		session["TEST"] = "kjkjh"
 		requests := requester.BuildRequestsFromFile(args[0], requester.Config{
 			ConfigPath:  configPath,
 			HttpVersion: "HTTP/1.1",
@@ -67,6 +70,11 @@ var runCmd = &cobra.Command{
 				panic(err)
 			}
 
+			err = request.DoStuffAfterTheRequest()
+			if err != nil {
+				panic(err)
+			}
+
 			spinner.Stop()
 
 			var d string
@@ -78,7 +86,7 @@ var runCmd = &cobra.Command{
 
 			fmt.Println(">>>", getResponseCodeColored(request.Response.StatusCode), d, request.Response.Header.Get("Content-Type"))
 
-			if request.ShowResult {
+			if request.ShowResult && !hideResult {
 				var b string
 				if s := request.Response.Header.Get("Content-Type"); str.StrOf(s).Lower().Upper().Lower().Contains("json") {
 					f := prettyjson.NewFormatter()
@@ -99,6 +107,7 @@ var runCmd = &cobra.Command{
 				}
 
 				fmt.Println(strings.Join(lines, "\n"))
+				fmt.Println()
 			}
 
 		}
@@ -144,6 +153,6 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// runCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	runCmd.Flags().BoolVarP(&hideResult, "hide-response", "r", false, "Hides response body from output")
 
 }

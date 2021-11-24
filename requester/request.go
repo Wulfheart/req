@@ -3,12 +3,16 @@ package requester
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
+	"fmt"
+	"github.com/Wulfheart/req/str"
 	"github.com/joho/godotenv"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
+	v8 "rogchap.com/v8go"
 	"strconv"
 	"strings"
 	"time"
@@ -22,15 +26,17 @@ type Request struct {
 	rawString             string
 	workingString         string
 	config                *Config
-	sessionVariables      *SessionVariables
+	sessionVariables      *map[string]string
 	environmentVariables  map[string]string
 	collectionVariables   map[string]string
+	clientJS              string
 	ShowResult            bool
 	TimeNeeded            time.Duration
 }
 
 func (r *Request) Prepare() error {
 	r.workingString = strings.TrimSpace(r.rawString)
+	r.getJS()
 	r.loadVariablesFromFile()
 	r.injectVariables()
 	r.addContentLengthIfNeeded()
@@ -41,6 +47,20 @@ func (r *Request) Prepare() error {
 		return err
 	}
 	return nil
+}
+
+func (r *Request) getJS() {
+	regex := regexp.MustCompile(`>\s*{%[\w\d\s]*%}`)
+	js := regex.FindAllString(r.workingString, 1)
+	if len(js) == 0 {
+		return
+	}
+
+	regex.ReplaceAllString(r.workingString, "")
+
+	regex = regexp.MustCompile(`>\s*{%`)
+	regex.ReplaceAllString(js[0], "")
+	r.clientJS = strings.TrimSpace(js[0])
 }
 
 func (r *Request) loadVariablesFromFile() {
@@ -187,6 +207,66 @@ func (r *Request) DoRequest() error {
 	return nil
 }
 
-func (r *Request) DoStuffAfterTheRequest() {
+func (r *Request) DoStuffAfterTheRequest() error {
+	if r.clientJS == "" {
+		return nil
+	}
 
+	session, err := r.jsonify(*r.sessionVariables)
+	if err != nil {
+		return err
+	}
+	environment, err := r.jsonify(r.environmentVariables)
+	if err != nil {
+		return err
+	}
+	collection, err := r.jsonify(r.collectionVariables)
+	if err != nil {
+		return err
+	}
+	body, err := r.jsonify(r.ResponseBody)
+	if err != nil {
+		return err
+	}
+	status, err := r.jsonify(r.Response.StatusCode)
+	if err != nil {
+		return err
+	}
+	headers, err := r.jsonify(r.Response.Header)
+	if err != nil {
+		return err
+	}
+
+	f, _ := os.ReadFile("./requester/js/main.js")
+	o := str.StrOf(string(f)).Replace("{{session}}", session).
+		Replace("{{environment}}", environment).
+		Replace("{{collection}}", collection).
+		Replace("{{body}}", body).
+		Replace("{{status}}", status).
+		Replace("{{headers}}", headers).
+		Replace("// {{Custom Code}}", r.clientJS)
+
+	x := o.ToString()
+
+	ctx, _ := v8.NewContext() // creates a new V8 context with a new Isolate aka VM
+	_, err = ctx.RunScript(x, "main.js")
+	if err != nil {
+		return err
+	}
+
+	val, err := ctx.RunScript("JSON.stringify(client.session)", "main.js")
+	if err != nil {
+		return err
+	}
+	fmt.Println(val)
+	return nil
+}
+
+func (r *Request) jsonify(v interface{}) (string, error) {
+	res, err := json.Marshal(v)
+
+	if err != nil {
+		return "", err
+	}
+	return string(res), nil
 }

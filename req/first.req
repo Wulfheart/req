@@ -1,2 +1,5 @@
 GET https://httpbin.org/get
-Host: httpbin.org
+
+###
+
+GET https://httpbin.org/get
