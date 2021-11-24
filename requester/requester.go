@@ -15,11 +15,12 @@ func BuildRequestsFromFile(filepath string, c Config, session *map[string]string
 
 	lastRequestBreakFoundInLine := 0
 	var i int
-	for i, line := range lines {
+	for _, line := range lines {
 		if strings.Index(line, RequestSeparator) == 0 {
 			requests = append(requests, Request{rawString: strings.Join(lines[lastRequestBreakFoundInLine:i], Newline), config: &c, sessionVariables: session, ShowResult: showResult})
 			lastRequestBreakFoundInLine = i + 1
 		}
+		i++
 	}
 
 	if i != lastRequestBreakFoundInLine {

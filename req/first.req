@@ -1,5 +1,12 @@
-GET https://httpbin.org/get
+GET https://httpbin.org/bearer
+Authorization: Bearer b
+
+
+> {%
+    client.environment.set("token", "tr")
+
+%}
 
 ###
 
-GET https://httpbin.org/get
+GET https://httpbin.org/bearer

@@ -40,12 +40,18 @@ var runCmd = &cobra.Command{
 			file, _ = os.Stat(configPath)
 
 		}
-		var session map[string]string = make(map[string]string)
-		session["TEST"] = "kjkjh"
-		requests := requester.BuildRequestsFromFile(args[0], requester.Config{
+
+		config := requester.Config{
 			ConfigPath:  configPath,
 			HttpVersion: "HTTP/1.1",
-		}, &session, true)
+		}
+
+		var session map[string]string = make(map[string]string)
+		preflight := requester.BuildRequestsFromFile(filepath.Join(config.ConfigPath, requester.PreRunFileName), config, &session, false)
+
+		requests := requester.BuildRequestsFromFile(args[0], config, &session, true)
+
+		requests = append(preflight, requests...)
 
 		for _, request := range requests {
 			err = request.Prepare()
@@ -107,8 +113,8 @@ var runCmd = &cobra.Command{
 				}
 
 				fmt.Println(strings.Join(lines, "\n"))
-				fmt.Println()
 			}
+			fmt.Println()
 
 		}
 	},
@@ -117,11 +123,13 @@ var runCmd = &cobra.Command{
 func getMethodColored(m string) string {
 	switch m {
 	case "GET":
-		return color.New(color.FgWhite, color.BgBlue).Sprint(m)
+		return color.New(color.FgWhite, color.BgBlue, color.Bold).Sprint(m)
+	case "POST":
+		return color.New(color.FgWhite, color.BgGreen, color.Bold).Sprint(m)
 	case "DELETE":
-		return color.New(color.BgRed).Sprint(m)
+		return color.New(color.BgRed, color.Bold).Sprint(m)
 	default:
-		return m
+		return color.New(color.BgWhite, color.FgBlack, color.Bold).Sprint(m)
 	}
 
 }
@@ -137,9 +145,9 @@ func getResponseCodeColored(c int) string {
 		return color.New(color.FgHiWhite).Sprint(c)
 	}
 	if c < 500 {
-		return color.New(color.FgHiRed).Sprint(c)
+		return color.New(color.FgHiCyan).Sprint(c)
 	}
-	return color.New(color.FgHiCyan).Sprint(c)
+	return color.New(color.FgHiRed).Sprint(c)
 }
 
 func init() {

@@ -31,6 +31,21 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+		globalHeadersPath := filepath.Join(folderPath, requester.GlobalHeaderFileName)
+		_, err = os.Create(globalHeadersPath)
+		if err != nil {
+			panic(err)
+		}
+		preRunPath := filepath.Join(folderPath, requester.GlobalHeaderFileName)
+		_, err = os.Create(preRunPath)
+		if err != nil {
+			panic(err)
+		}
+
+		err = os.WriteFile(filepath.Join(folderPath, ".gitignore"), []byte("env.req.env"), 0644)
+		if err != nil {
+			panic(err)
+		}
 
 		fmt.Println("Collection created at", folder)
 	},

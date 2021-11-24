@@ -10,6 +10,8 @@ const (
 	EnvironmentVariablesFileName = "env.req.env"
 	CollectionVariablesFileName  = "collection.req.env"
 	ConfigDirectoryName          = ".req"
+	GlobalHeaderFileName         = "global_headers"
+	PreRunFileName               = "pre_run.req"
 
 	TemplateVariableDeclarationLeft  = "{{"
 	TemplateVariableDeclarationRight = "}}"
