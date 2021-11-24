@@ -1,26 +1,17 @@
-/*
-Copyright © 2021 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
 	"fmt"
 	"github.com/Wulfheart/req/requester"
+	"github.com/Wulfheart/req/str"
+	"github.com/fatih/color"
+	"github.com/hokaccha/go-prettyjson"
 	"github.com/spf13/cobra"
+	"github.com/theckman/yacspin"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 )
 
 // runCmd represents the run command
@@ -51,20 +42,95 @@ var runCmd = &cobra.Command{
 		requests := requester.BuildRequestsFromFile(args[0], requester.Config{
 			ConfigPath:  configPath,
 			HttpVersion: "HTTP/1.1",
-		}, &session)
+		}, &session, true)
 
 		for _, request := range requests {
 			err = request.Prepare()
 			if err != nil {
 				panic(err)
 			}
+
+			cfg := yacspin.Config{
+				Frequency:       100 * time.Millisecond,
+				CharSet:         []string{"   ", "  <", " <<", "<<<", "<< ", "<  ", "   "},
+				Suffix:          fmt.Sprintf(" %s %s", getMethodColored(request.OriginalRequest.Method), request.OriginalRequest.RequestURI),
+				SuffixAutoColon: true,
+				StopCharacter:   "<<<",
+			}
+			// fmt.Println("<<<", request.OriginalRequest.Method, request.OriginalRequest.RequestURI)
+
+			spinner, _ := yacspin.New(cfg)
+			spinner.Start()
+
 			err = request.DoRequest()
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println(request.Response.Status)
+
+			spinner.Stop()
+
+			var d string
+			if request.TimeNeeded > time.Second {
+				d = fmt.Sprintf("%.1fs", request.TimeNeeded.Seconds())
+			} else {
+				d = fmt.Sprintf("%dms", request.TimeNeeded.Milliseconds())
+			}
+
+			fmt.Println(">>>", getResponseCodeColored(request.Response.StatusCode), d, request.Response.Header.Get("Content-Type"))
+
+			if request.ShowResult {
+				var b string
+				if s := request.Response.Header.Get("Content-Type"); str.StrOf(s).Lower().Upper().Lower().Contains("json") {
+					f := prettyjson.NewFormatter()
+					f.KeyColor = color.New(color.FgWhite)
+					s, err := f.Format([]byte(request.ResponseBody))
+					if err != nil {
+						panic(err)
+					}
+					b = string(s)
+				} else {
+					b = request.ResponseBody
+				}
+
+				lines := strings.Split(b, "\n")
+
+				for i, l := range lines {
+					lines[i] = str.StrOf(l).Prepend("    ").ToString()
+				}
+
+				fmt.Println(strings.Join(lines, "\n"))
+			}
+
 		}
 	},
+}
+
+func getMethodColored(m string) string {
+	switch m {
+	case "GET":
+		return color.New(color.FgWhite, color.BgBlue).Sprint(m)
+	case "DELETE":
+		return color.New(color.BgRed).Sprint(m)
+	default:
+		return m
+	}
+
+}
+
+func getResponseCodeColored(c int) string {
+	if c < 100 {
+		return color.New(color.FgHiBlue).Sprint(c)
+	}
+	if c < 300 {
+		return color.New(color.FgHiGreen).Sprint(c)
+	}
+	if c < 400 {
+		return color.New(color.FgHiWhite).Sprint(c)
+	}
+	if c < 500 {
+		return color.New(color.FgHiRed).Sprint(c)
+	}
+	return color.New(color.FgHiCyan).Sprint(c)
 }
 
 func init() {

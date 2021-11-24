@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Request struct {
@@ -24,6 +25,8 @@ type Request struct {
 	sessionVariables      *SessionVariables
 	environmentVariables  map[string]string
 	collectionVariables   map[string]string
+	ShowResult            bool
+	TimeNeeded            time.Duration
 }
 
 func (r *Request) Prepare() error {
@@ -152,8 +155,6 @@ func (r *Request) parse() error {
 		return err
 	}
 
-	req.RequestURI = ""
-
 	r.OriginalRequest = req
 
 	req, _ = http.ReadRequest(bufio.NewReader(bytes.NewReader([]byte(r.workingString))))
@@ -165,7 +166,9 @@ func (r *Request) parse() error {
 }
 
 func (r *Request) DoRequest() error {
+	start := time.Now()
 	res, err := http.DefaultClient.Do(r.internalRequestToFire)
+	r.TimeNeeded = time.Since(start)
 
 	if err != nil {
 		return err

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func BuildRequestsFromFile(filepath string, c Config, session *SessionVariables) []Request {
+func BuildRequestsFromFile(filepath string, c Config, session *SessionVariables, showResult bool) []Request {
 	// Prepare File
 	content := openAndPrepareFile(filepath)
 	// Split file in all requests
@@ -16,12 +16,12 @@ func BuildRequestsFromFile(filepath string, c Config, session *SessionVariables)
 	lastRequestBreakFoundInLine := 0
 	for i, line := range lines {
 		if strings.Index(line, RequestSeparator) == 0 {
-			requests = append(requests, Request{rawString: strings.Join(lines[lastRequestBreakFoundInLine:i], Newline), config: &c, sessionVariables: session})
+			requests = append(requests, Request{rawString: strings.Join(lines[lastRequestBreakFoundInLine:i], Newline), config: &c, sessionVariables: session, ShowResult: showResult})
 		}
 	}
 
 	if len(requests) == 0 {
-		requests = append(requests, Request{rawString: strings.Join(lines[:], Newline), config: &c, sessionVariables: session})
+		requests = append(requests, Request{rawString: strings.Join(lines[:], Newline), config: &c, sessionVariables: session, ShowResult: showResult})
 	}
 
 	return requests
