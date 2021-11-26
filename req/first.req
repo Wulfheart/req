@@ -4,7 +4,6 @@ Authorization: Bearer b
 
 > {%
     client.environment.set("token", "tr")
-
 %}
 
 ###

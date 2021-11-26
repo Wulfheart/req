@@ -17,14 +17,20 @@ func BuildRequestsFromFile(filepath string, c Config, session *map[string]string
 	var i int
 	for _, line := range lines {
 		if strings.Index(line, RequestSeparator) == 0 {
-			requests = append(requests, Request{rawString: strings.Join(lines[lastRequestBreakFoundInLine:i], Newline), config: &c, sessionVariables: session, ShowResult: showResult})
+			currentStr := strings.TrimSpace(strings.Join(lines[lastRequestBreakFoundInLine:i], Newline))
+			if len(currentStr) > 0 {
+				requests = append(requests, Request{rawString: currentStr, config: &c, sessionVariables: session, ShowResult: showResult})
+			}
 			lastRequestBreakFoundInLine = i + 1
 		}
 		i++
 	}
 
 	if i != lastRequestBreakFoundInLine {
-		requests = append(requests, Request{rawString: strings.Join(lines[lastRequestBreakFoundInLine:], Newline), config: &c, sessionVariables: session, ShowResult: showResult})
+		currentStr := strings.TrimSpace(strings.Join(lines[lastRequestBreakFoundInLine:], Newline))
+		if len(currentStr) > 0 {
+			requests = append(requests, Request{rawString: strings.Join(lines[lastRequestBreakFoundInLine:], Newline), config: &c, sessionVariables: session, ShowResult: showResult})
+		}
 
 	}
 

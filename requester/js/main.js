@@ -36,7 +36,7 @@ class Response {
     constructor(body, headers, status) {
         try {
             this.body = JSON.parse(body)
-        } catch {
+        } catch (error) {
             this.body = body
         }
         this.headers = new Headers(headers)
@@ -60,8 +60,8 @@ class Headers {
     }
 }
 
-var client = new Client('{{session}}', '{{environment}}', '{{collection}}')
-var response = new Response('{{body}}', '{{headers}}', '{{status}}')
+var client = new Client(`{{session}}`, `{{environment}}`, `{{collection}}`)
+var response = new Response(`{{body}}`, `{{headers}}`, `{{status}}`)
 
 // {{Custom Code}}
 

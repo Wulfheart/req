@@ -1,7 +1,7 @@
 package requester
 
 import (
-	"embed"
+	_ "embed"
 	"encoding/json"
 	"github.com/Wulfheart/req/str"
 	"github.com/joho/godotenv"
@@ -10,8 +10,8 @@ import (
 	v8 "rogchap.com/v8go"
 )
 
-//go:embed js/*
-var file embed.FS
+//go:embed js/main.js
+var file string
 
 func (r *Request) DoStuffAfterTheRequest() error {
 	if r.clientJS == "" {
@@ -40,11 +40,7 @@ func (r *Request) DoStuffAfterTheRequest() error {
 		return err
 	}
 
-	f, err := file.ReadFile("js/main.js")
-	if err != nil {
-		panic(err)
-	}
-	o := str.StrOf(string(f)).Replace("{{session}}", session).
+	o := str.StrOf(string(file)).Replace("{{session}}", session).
 		Replace("{{environment}}", environment).
 		Replace("{{collection}}", collection).
 		Replace("{{body}}", r.ResponseBody).
@@ -57,6 +53,7 @@ func (r *Request) DoStuffAfterTheRequest() error {
 	ctx, _ := v8.NewContext() // creates a new V8 context with a new Isolate aka VM
 	_, err = ctx.RunScript(x, "main.js")
 	if err != nil {
+
 		return err
 	}
 

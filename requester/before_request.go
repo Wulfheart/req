@@ -122,7 +122,7 @@ func (r *Request) replacePlaceholderWithActualValueOnString(s string, varName st
 }
 
 func (r *Request) addContentLengthIfNeeded() {
-	regex := regexp.MustCompile("\\n\\s*\\n")
+	regex := regexp.MustCompile("\\r\\n\\s*\\r\\n")
 	splitted := regex.Split(r.workingString, 2)
 
 	regex = regexp.MustCompile("Content-Length:.*")
