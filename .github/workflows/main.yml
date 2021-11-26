@@ -41,4 +41,10 @@ jobs:
         
       # Runs a set of commands using the runners shell
       - name: Build
-        run: go build -v
+        run: GOARCH=amd64 GOOS=windows go build -o req.exe  
+        
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: req-win.exe
+          path: bin\req-win.exe
