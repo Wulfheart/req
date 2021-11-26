@@ -41,7 +41,7 @@ jobs:
         
       # Runs a set of commands using the runners shell
       - name: Build
-        run: GOARCH=amd64 GOOS=windows go build -o req.exe  
+        run: GOARCH=amd64 GOOS=windows go build -o req-win.exe  
         shell: bash
         
       - name: Archive production artifacts
