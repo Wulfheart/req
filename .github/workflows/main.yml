@@ -32,11 +32,7 @@ jobs:
           msystem: MINGW64
           update: true
           install: git mingw-w64-x86_64-toolchain
-
-      - name: Install needed dependency
-        shell: msys2 {0}
-        run: pacman -S mingw-w64-x86_64-toolchain
         
       # Runs a set of commands using the runners shell
       - name: Build
-        run: go build
+        run: go build -v
