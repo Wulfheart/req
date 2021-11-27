@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "build": "npx esbuild ./src/main.js --bundle --outfile=main.js"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "esbuild": "^0.14.0",
+    "jsonpath": "^1.1.1"
+  }
+}

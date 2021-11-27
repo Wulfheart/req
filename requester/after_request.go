@@ -10,7 +10,7 @@ import (
 	v8 "rogchap.com/v8go"
 )
 
-//go:embed js/main.js
+//go:embed js/src/main.js
 var file string
 
 func (r *Request) DoStuffAfterTheRequest() error {
