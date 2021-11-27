@@ -21,19 +21,18 @@ func (r *Request) Prepare() error {
 	r.injectVariables()
 	r.addContentLengthIfNeeded()
 	r.addHttpToFirstLineOfRequestIfNeeded()
+	r.addGlobalHeaders()
 
 	err := r.parse()
 	if err != nil {
 		return err
 	}
 
-	r.addGlobalHeaders()
-
 	return nil
 }
 
 func (r *Request) getJS() {
-	// r.workingString = str.StrOf(r.workingString).Replace(Newline, UnixNewline).ToString()
+	// r.workingString = str.StrOf(r.workingString).Replace(Newline, UnixNewline).String()
 	regex := regexp.MustCompile(`(?s)(>\s*{%)(.+?)(%})`)
 	js := regex.FindAllString(r.workingString, 1)
 	if len(js) == 0 {
@@ -44,7 +43,7 @@ func (r *Request) getJS() {
 
 	regex = regexp.MustCompile(`>\s*{%`)
 	js[0] = regex.ReplaceAllString(js[0], "")
-	r.clientJS = str.StrOf(strings.TrimSpace(js[0])).Replace("%}", "").ToString()
+	r.clientJS = str.StrOf(strings.TrimSpace(js[0])).Replace("%}", "").String()
 }
 
 func (r *Request) loadVariablesFromFile() {
@@ -161,7 +160,7 @@ func (r *Request) addHttpToFirstLineOfRequestIfNeeded() {
 
 func (r *Request) parse() error {
 
-	x := str.StrOf(r.workingString).Replace("\r\r", "\r").ToString()
+	x := str.StrOf(r.workingString).Replace("\r\r", "\r").String()
 	req, err := http.ReadRequest(bufio.NewReader(strings.NewReader(x)))
 
 	if err != nil {
@@ -179,14 +178,15 @@ func (r *Request) parse() error {
 }
 
 func (r *Request) addGlobalHeaders() {
-	// Load file
+	// Parsing the global file
+
 	b, err := os.ReadFile(filepath.Join(r.config.ConfigPath, GlobalHeaderFileName))
 	if err != nil {
 		panic(err)
 	}
 
 	globals := string(b)
-	globals = str.StrOf(globals).Replace(UnixNewline, Newline).ToString()
+	globals = str.StrOf(globals).Replace(UnixNewline, Newline).String()
 	variables := r.getAllVariablesFromString(globals)
 
 	for _, variable := range variables {
@@ -203,16 +203,39 @@ func (r *Request) addGlobalHeaders() {
 
 	httpHeader := http.Header(mimeHeader)
 
+	// Getting the original headers
+	splitted := str.StrOf(r.workingString).TrimSpaceLeft().Split(Newline + Newline)
+
+	firstPart := str.StrOf(splitted[0]).Split(Newline)
+
+	reader = bufio.NewReader(strings.NewReader(strings.Join(firstPart[1:], Newline) + Newline + Newline))
+	tp = textproto.NewReader(reader)
+	mimeHeaderOriginal, err := tp.ReadMIMEHeader()
+	if err != nil {
+		panic(err)
+	}
+
+	httpHeaderOriginal := http.Header(mimeHeaderOriginal)
+
 	// Only set if does not exist
 	for key, values := range httpHeader {
-		if r.OriginalRequest.Header.Values(key) == nil {
+		if httpHeaderOriginal.Values(key) == nil {
 			for _, value := range values {
 				value = strings.ReplaceAll(value, "\r\r", "\r")
-				r.OriginalRequest.Header.Set(key, value)
-				// Keep them in sync
-				r.internalRequestToFire.Header.Set(key, value)
+				httpHeaderOriginal.Set(key, value)
 			}
 		}
 	}
+
+	buf := bytes.NewBufferString("")
+
+	err = httpHeaderOriginal.Write(buf)
+	if err != nil {
+		panic(err)
+	}
+
+	r.workingString = strings.Join(append([]string{}, firstPart[0], buf.String()), Newline) + Newline + strings.Join(splitted[1:], Newline)
+
+	err = nil
 
 }

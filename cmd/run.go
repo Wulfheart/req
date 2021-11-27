@@ -109,7 +109,7 @@ var runCmd = &cobra.Command{
 				lines := strings.Split(b, "\n")
 
 				for i, l := range lines {
-					lines[i] = str.StrOf(l).Prepend("    ").ToString()
+					lines[i] = str.StrOf(l).Prepend("    ").String()
 				}
 
 				fmt.Println(strings.Join(lines, "\n"))

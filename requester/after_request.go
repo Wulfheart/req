@@ -48,7 +48,7 @@ func (r *Request) DoStuffAfterTheRequest() error {
 		Replace("{{headers}}", headers).
 		Replace("// {{Custom Code}}", r.clientJS)
 
-	x := o.ToString()
+	x := o.String()
 
 	ctx, _ := v8.NewContext() // creates a new V8 context with a new Isolate aka VM
 	_, err = ctx.RunScript(x, "main.js")

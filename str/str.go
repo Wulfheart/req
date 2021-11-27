@@ -1,6 +1,9 @@
 package str
 
-import "strings"
+import (
+	"strings"
+	"unicode"
+)
 
 type Str struct {
 	value string
@@ -18,7 +21,25 @@ func (s *Str) TrimSpace() *Str {
 	return s
 }
 
-func (s *Str) ToString() string {
+func (s *Str) TrimSpaceLeft() *Str {
+	s.value = strings.TrimLeftFunc(s.value, func(r rune) bool {
+		return unicode.IsSpace(r)
+	})
+	return s
+}
+
+func (s *Str) TrimSpaceRight() *Str {
+	s.value = strings.TrimRightFunc(s.value, func(r rune) bool {
+		return unicode.IsSpace(r)
+	})
+	return s
+}
+
+func (s *Str) Split(sep string) []string {
+	return strings.Split(s.value, sep)
+}
+
+func (s *Str) String() string {
 	return s.value
 }
 

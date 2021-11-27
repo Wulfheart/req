@@ -1,5 +1,4 @@
 GET https://httpbin.org/bearer
-Authorization: Bearer b
 
 
 > {%
