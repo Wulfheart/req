@@ -18,7 +18,7 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-    name: Build for ${{ matrix.platform }}-${{ matrix.GOOS }}-${{matric.GOARCH}}
+    name: Build for ${{ matrix.platform }}-${{ matrix.GOOS }}-${{matrix.GOARCH}}
     strategy:
             matrix:
                 platform: [windows-latest]
