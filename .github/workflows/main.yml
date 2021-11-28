@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Win Build
+name: Dev build
 
 # Controls when the workflow will run
 on:
@@ -18,10 +18,18 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
-    runs-on: windows-latest
+    name: Build for ${{ matrix.platform }}-${{ matrix.GOOS }}-${{matric.GOARCH}}
+    strategy:
+            matrix:
+                platform: [windows-latest]
+                GOOS: [windows, linux, darwin]
+                GOARCH: [amd64, arm64]
+                exclude:
+                  - GOOS: windows
+                    GOARCH: arm64
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    runs-on: ${{matrix.platform}}
+
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
@@ -41,11 +49,11 @@ jobs:
         
       # Runs a set of commands using the runners shell
       - name: Build
-        run: GOARCH=amd64 GOOS=windows go build -o req-win.exe  
+        run: GOARCH=${{matrix.GOARCH}} GOOS=${{matrix.GOOS}} go build -o req-${{matrix.GOOS}}-${{matrix.GOARCH}}  
         shell: bash
         
       - name: Archive production artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: req-win.exe
-          path: ./req-win.exe
+          name: req-${{matrix.GOOS}}-${{matrix.GOARCH}}
+          path: ./req-${{matrix.GOOS}}-${{matrix.GOARCH}}
