@@ -50,7 +50,7 @@ jobs:
       - name: Archive production artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: req-${{matrix.GOOS}}-${{matrix.GOARCH}}
+          name: req-${{matrix.GOOS}}-${{matrix.GOARCH}}.exe
           path: ./req-${{matrix.GOOS}}-${{matrix.GOARCH}}
           
   build-macos:
