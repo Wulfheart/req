@@ -16,18 +16,13 @@ on:
  
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    name: Build for ${{ matrix.platform }}-${{ matrix.GOOS }}-${{matrix.GOARCH}}
+  build-windows:
+    name: Build on ${{ matrix.platform }} for ${{ matrix.GOOS }}-${{matrix.GOARCH}}
     strategy:
             matrix:
                 platform: [windows-latest]
-                GOOS: [windows, linux, darwin]
-                GOARCH: [amd64, arm64]
-                exclude:
-                  - GOOS: windows
-                    GOARCH: arm64
-
+                GOOS: [windows]
+                GOARCH: [amd64]
     runs-on: ${{matrix.platform}}
 
     steps:
@@ -57,3 +52,58 @@ jobs:
         with:
           name: req-${{matrix.GOOS}}-${{matrix.GOARCH}}
           path: ./req-${{matrix.GOOS}}-${{matrix.GOARCH}}
+          
+  build-macos:
+    name: Build on ${{ matrix.platform }} for ${{ matrix.GOOS }}-${{matrix.GOARCH}}
+    strategy:
+            matrix:
+                platform: [macos-latest]
+                GOOS: [darwin]
+                GOARCH: [amd64, arm64]
+    runs-on: ${{matrix.platform}}
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.17.3' # The Go version to download (if necessary) and use.
+        
+      # Runs a set of commands using the runners shell
+      - name: Build
+        run: GOARCH=${{matrix.GOARCH}} GOOS=${{matrix.GOOS}} go build -o req-${{matrix.GOOS}}-${{matrix.GOARCH}}  
+        shell: bash
+        
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: req-${{matrix.GOOS}}-${{matrix.GOARCH}}
+          path: ./req-${{matrix.GOOS}}-${{matrix.GOARCH}}
+          
+  build-linux:
+    name: Build on ${{ matrix.platform }} for ${{ matrix.GOOS }}-${{matrix.GOARCH}}
+    strategy:
+            matrix:
+                platform: [ubuntu-20.04]
+                GOOS: [linux]
+                GOARCH: [amd64, arm64]
+    runs-on: ${{matrix.platform}}
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.17.3' # The Go version to download (if necessary) and use.
+
+      # Runs a set of commands using the runners shell
+      - name: Build
+        run: GOARCH=${{matrix.GOARCH}} GOOS=${{matrix.GOOS}} go build -o req-${{matrix.GOOS}}-${{matrix.GOARCH}}  
+        shell: bash
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: req-${{matrix.GOOS}}-${{matrix.GOARCH}}
+          path: ./req-${{matrix.GOOS}}-${{matrix.GOARCH}}
+
