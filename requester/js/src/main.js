@@ -1,4 +1,4 @@
-const jsonpath = require('jsonpath')
+export var jsonpath = require('jsonpath-plus')
 
 class Variables {
     variableBag
@@ -16,7 +16,7 @@ class Variables {
     }
 }
 
-class Client {
+export class Client {
     session;
     environment;
     collection;
@@ -29,7 +29,7 @@ class Client {
     }
 }
 
-class Response {
+export class Response {
     body;
     headers;
     status;
@@ -61,9 +61,4 @@ class Headers {
         return this.#data[s] ?? null
     }
 }
-
-var client = new Client(`{{session}}`, `{{environment}}`, `{{collection}}`)
-var response = new Response(`{{body}}`, `{{headers}}`, `{{status}}`)
-
-// {{Custom Code}}
 

@@ -1,8 +1,9 @@
-GET https://httpbin.org/bearer
+GET https://httpbin.org/get
 
 
 > {%
-    client.environment.set("token", "tr")
+    //client.environment.set("token", t.jsonpath.JSONPath({path: '$.headers.Accept', json: response.body}));
+    client.environment.set("token", response.body.origin);
 %}
 
 ###

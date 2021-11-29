@@ -243,7 +243,7 @@ func (r *Request) addGlobalHeaders() {
 func (r *Request) removeComments() {
 	var tmp []string
 	//goland:noinspection ALL
-	regex, err := regexp.Compile("[(#)(//)].*")
+	regex, err := regexp.Compile("#.*")
 	if err != nil {
 		panic(err)
 	}

@@ -10,7 +10,7 @@ import (
 	v8 "rogchap.com/v8go"
 )
 
-//go:embed js/src/main.js
+//go:embed js/dist/main.js
 var file string
 
 func (r *Request) DoStuffAfterTheRequest() error {
@@ -40,7 +40,10 @@ func (r *Request) DoStuffAfterTheRequest() error {
 		return err
 	}
 
-	o := str.StrOf(string(file)).Replace("{{session}}", session).
+	init := "var client = new t.Client(`{{session}}`, `{{environment}}`, `{{collection}}`)\n" +
+		"var response = new t.Response(`{{body}}`, `{{headers}}`, `{{status}}`)"
+
+	o := str.StrOf(init).Replace("{{session}}", session).
 		Replace("{{environment}}", environment).
 		Replace("{{collection}}", collection).
 		Replace("{{body}}", r.ResponseBody).
@@ -51,7 +54,20 @@ func (r *Request) DoStuffAfterTheRequest() error {
 	x := o.String()
 
 	ctx, _ := v8.NewContext() // creates a new V8 context with a new Isolate aka VM
+	_, err = ctx.RunScript(string(file), "main.js")
+	if err != nil {
+
+		return err
+	}
+
 	_, err = ctx.RunScript(x, "main.js")
+	if err != nil {
+
+		return err
+	}
+
+	// Execute client things
+	_, err = ctx.RunScript(r.clientJS, "main.js")
 	if err != nil {
 
 		return err
