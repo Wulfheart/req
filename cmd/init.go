@@ -36,7 +36,7 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		preRunPath := filepath.Join(folderPath, requester.GlobalHeaderFileName)
+		preRunPath := filepath.Join(folderPath, requester.PreRunFileName)
 		_, err = os.Create(preRunPath)
 		if err != nil {
 			panic(err)
