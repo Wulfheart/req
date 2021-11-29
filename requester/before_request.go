@@ -17,6 +17,7 @@ import (
 func (r *Request) Prepare() error {
 	r.workingString = strings.TrimSpace(r.rawString)
 	r.getJS()
+	r.removeComments()
 	r.loadVariablesFromFile()
 	r.injectVariables()
 	r.addContentLengthIfNeeded()
@@ -237,5 +238,18 @@ func (r *Request) addGlobalHeaders() {
 	r.workingString = strings.Join(append([]string{}, firstPart[0], buf.String()), Newline) + Newline + strings.Join(splitted[1:], Newline)
 
 	err = nil
+}
 
+func (r *Request) removeComments() {
+	var tmp []string
+	//goland:noinspection ALL
+	regex, err := regexp.Compile("[(#)(//)].*")
+	if err != nil {
+		panic(err)
+	}
+	for _, s := range str.StrOf(r.workingString).Split(Newline) {
+		tmp = append(tmp, regex.ReplaceAllString(s, ""))
+	}
+
+	r.workingString = strings.Join(tmp, Newline)
 }
