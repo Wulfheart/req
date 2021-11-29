@@ -1,5 +1,3 @@
-const jsonpath = require('jsonpath')
-
 class Variables {
     variableBag
 
